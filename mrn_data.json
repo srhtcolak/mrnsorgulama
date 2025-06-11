@@ -1,0 +1,14 @@
+[
+  {
+    "mrn": "24TR16010000676504",
+    "status": "Tahsilat Sürecinde",
+    "office": "Bursa Gümrük Müdürlüğü",
+    "holder": "ACME LOJİSTİK A.Ş."
+  },
+  {
+    "mrn": "24TR16010000555522",
+    "status": "Araştırma Devam Ediyor",
+    "office": "Bursa Gümrük Müdürlüğü",
+    "holder": "TEST NAKLİYAT LTD. ŞTİ."
+  }
+]

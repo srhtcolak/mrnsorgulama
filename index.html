@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>MRN Araştırma / Tahsilat Durumu Sorgulama</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('Ticaret Bakanlığı Logo Altın Arma TR.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 450px;
+    opacity: 0.05;
+    z-index: -1;
+  }
+
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: white;
+    }
+    input, button {
+      margin: 5px;
+      padding: 10px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 80%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    #adminPaneli {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MRN Araştırma / Tahsilat Durumu Sorgulama</h1>
+
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 40px; margin-top: 40px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px;">
+    <input type="text" id="mrnInput" placeholder="MRN giriniz (örneğin: 24TR16010000676504)" style="text-transform: uppercase; width: 320px; padding: 10px;"><br>
+    <button onclick="sorgula()">Sorgula</button>
+    <button onclick="followUp()">MRN Follow Up</button>
+    <div id="sorguSonucu" style="margin-top: 20px;"></div>
+  </div>
+  
+
+
+  
+
+  <div style="margin-top: 40px; padding: 15px; background: #f9f9f9; border-left: 4px solid orange; max-width: 600px; margin-left: auto; margin-right: auto; text-align: left;">
+    ⚠️ Bu sorgulama sayfası yalnızca <strong>Bursa Gümrük Müdürlüğü</strong> hareketli beyanlar için geçerlidir.<br>
+    ⚠️ Sorgulama, <strong>NCTS Yerel Koordinatörü</strong> tarafından sisteme girilen verileri içermektedir.<br>
+    ⚠️ Bu veriler, <strong>bilgi amaçlı</strong> olup <strong>yasal bir geçerliliği yoktur</strong>.
+<p style="margin-top:15px;">📅 Veriler her <strong>pazartesi</strong> günü güncellenmektedir.</p><br><br>
+    📧 İletişim: <strong>Serhat Çolak</strong> – <a href="mailto:s.colak2@ticaret.gov.tr">s.colak2@ticaret.gov.tr</a><br>📍 Adres: Fethiye Organize Sanayi Bölgesi Sarı Cadde, No:2 E Blok, 16140 Nilüfer / Bursa – Türkiye<br>📮 KEP: <a href="mailto:bursagumrukmudurlugu@gtb.hs01.kep.tr">bursagumrukmudurlugu@gtb.hs01.kep.tr</a><br>
+    
+  </div>
+
+  
+<div style="margin-top: 40px; background: #f4f4f4; padding: 20px; border: 1px solid #ccc; border-radius: 6px;">
+  <h3>Araştırma/Tahsilat Süreçleri</h3>
+  <p>Bu alanda MRN süreciyle ilgili detaylı açıklama, talimat veya bilgilendirme içerikleri yer alabilir.</p>
+  <p>Şu an bu alan <strong>deneme içeriği</strong> ile doldurulmuştur. Yönetici paneli üzerinden ileride düzenlenebilir hâle getirilecektir.</p>
+</div>
+
+
+<div id="adminLogin" style="margin-top: 30px;; font-size: 14px; margin-top: 60px;">
+    <h2>Giriş</h2>
+    <p>(Veri girişi için NCTS Yerel Koordinatörü tarafından kullanılır.)</p>
+    <input type="text" id="adminUser" placeholder="Kullanıcı Adı" style="width:250px;"><br>
+    <input type="password" id="adminPass" placeholder="Şifre" style="width:250px;"><br>
+    <button onclick="yetkiAc()">Giriş</button>
+
+    <div id="adminPaneli" style="display: none; margin-top: 20px;">
+      <p><strong>Excel (.xlsx) yükleyerek veri güncelle:</strong></p>
+      <input type="file" id="excelInput" accept=".xlsx" />
+      <br>
+      <button onclick="yukle()">Verileri Güncelle</button>
+    </div>
+  </div>
+
+
+
+  
+  </div>
+
+
+
+  
+
+
+  
+  </div>
+
+
+  
+
+
+  </div>
+
+
+
+  </div>
+
+
+  
+
+  
+
+  
+  
+
+
+  <script>
+    let mrnData = {
+      "24TR16010000676504": { "Statü": "Tahsilat Süreci", "Varış Gümrük İdaresi": "TR160100", "Rejim Hak Sahibi": "6230046701" },
+      "24TR160100006763E1": { "Statü": "TC20 Düzenlendi", "Varış Gümrük İdaresi": "TR160100", "Rejim Hak Sahibi": "6230046701" }
+    };
+
+    function sorgula() {
+  // Sayfada yalnızca sorgu sonucu gözüksün
+  document.getElementById("adminLogin").style.display = "none";
+  const notlarBlock = document.querySelector('div[style*="border-left: 4px solid orange"]');
+  if (notlarBlock) notlarBlock.style.display = "none";
+      const mrn = document.getElementById("mrnInput").value.trim().toUpperCase();
+      const bilgi = mrnData[mrn];
+      const div = document.getElementById("sorguSonucu");
+      if (!bilgi) {
+        div.innerHTML = "<p style='color:red;'>Sonuç bulunamadı.</p>";
+        return;
+      }
+      div.innerHTML = `
+        <table>
+          <tr><th>MRN</th><td>${mrn}</td></tr>
+          <tr><th>Statü</th><td>${bilgi["Statü"]}</td></tr>
+          <tr><th>Varış Gümrük İdaresi</th><td>${bilgi["Varış Gümrük İdaresi"]}</td></tr>
+          <tr><th>Rejim Hak Sahibi</th><td>${bilgi["Rejim Hak Sahibi"]}</td></tr>
+        </table>
+      `;
+    }
+
+    function followUp() {
+      const mrn = document.getElementById("mrnInput").value.trim().toUpperCase();
+      if (!mrn) {
+        alert("Lütfen MRN giriniz.");
+        return;
+      }
+      const url = `https://ec.europa.eu/taxation_customs/dds2/mrn/mrn_home.jsp?Lang=en&Expand=true&MRN=${mrn}`;
+      window.open(url, "_blank");
+    }
+
+    function yetkiAc() {
+      const user = document.getElementById("adminUser").value.trim();
+      const pass = document.getElementById("adminPass").value.trim();
+      if (user === "21579" && pass === "14419907690") {
+        document.getElementById("adminPaneli").style.display = "block";
+        alert("✅ Giriş başarılı.");
+      } else {
+        alert("❌ Hatalı kullanıcı adı veya şifre.");
+      }
+    }
+
+    function yukle() {
+      const file = document.getElementById('excelInput').files[0];
+      if (!file) {
+        alert("Lütfen dosya seçin.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        mrnData = {};
+        json.forEach(row => {
+          if (row["MRN"]) {
+            mrnData[row["MRN"]] = {
+              "Statü": row["Belge Durum"] || "",
+              "Varış Gümrük İdaresi": row["VarışGI"] || "",
+              "Rejim Hak Sahibi": row["Asıl sorumlu TIN"] || ""
+            };
+          }
+        });
+        alert("✅ Veriler güncellendi.");
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  </script>
+</body>
+</html>
